@@ -6,11 +6,16 @@ logger:Warn("RUN")
 local debugbool = true
 local pixelsize = 2
 local maxpixels = 25
+gps = LibStub("LibGPS2")
 
 local function _test(eventCode, bookTitle, body, medium, showTitle, bookId)
     logger:Warn(bookTitle)
+    local x, y, zoneMapIndex = gps:LocalToGlobal(GetMapPlayerPosition("player"))
+    local angle = (math.deg(GetPlayerCameraHeading())-180) % 360
+    localization = string.format("%f : %f : %d", x, y, angle)
 
-    local ok, tab_or_message = qrcode(bookTitle) --THIS IS AN IMPORTANT LINE
+    local ok, tab_or_message = qrcode(localization) --THIS IS AN IMPORTANT LINE
+    
     if not ok then
         logger:Warn("is NOT ok")
     else
