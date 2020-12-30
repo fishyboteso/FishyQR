@@ -1,0 +1,3 @@
+[submodule "luaqrcode"]
+	path = luaqrcode
+	url = https://github.com/fishyboteso/luaqrcode.git
