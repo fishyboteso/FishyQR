@@ -1,0 +1,9 @@
+## Title: ESO QR
+## Author: Semjon Kerner
+## APIVersion: 100028
+## DependsOn: LibDebugLogger>=180
+## Version: 1.0.0
+## AddOnVersion: 100
+
+luaqrcode\qrencode.lua
+esoqr.lua
