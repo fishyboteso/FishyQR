@@ -3,6 +3,8 @@
 ## APIVersion: 100028
 ## Version: 1.0.0
 ## AddOnVersion: 100
+## DependsOn: LibGPS>=65 LibAddonMenu-2.0>=30
+## SavedVariables: EsoQRparamsvar
 
 luaqrcode\qrencode.lua
 esoqr.lua
