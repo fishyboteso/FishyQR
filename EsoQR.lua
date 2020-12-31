@@ -1,48 +1,46 @@
-EsoQR = { name = "EsoQR"}
+EsoQR = {
+    name = "EsoQR",
+    run_var = false,
+    oldlocal = ""
+}
 
-local logger = LibDebugLogger(EsoQR.name)
-logger:Warn("RUN")
-
-local debugbool = true
-local pixelsize = 5
+local gps = LibStub("LibGPS2")
+local pixelsize = 3
 local maxpixels = 25
-gps = LibStub("LibGPS2")
+local updatetime = 400
 
 --[[
-0.  add button
-1.  register event on button click (set_run_var_true())
-1.1     unregister event on button click (set_run_var_true())
-1.2     register event on button click (set_run_var_false())
-1.3     set running_var=true
-1.4     call qrcode-generation-function
-2   generate qrcode in a loop
-2.1     get Chalutier state, Keybindings, GPS
-2.2     end qrcode-generation-function when running_var=false
+[X] 0.  add button
+[X] 1.  register event on button click (set_run_var_true())
+[X] 1.1     unregister event on button click (set_run_var_true())
+[X] 1.2     register event on button click (set_run_var_false())
+[X] 1.3     set running_var=true
+[X] 1.4     call qrcode-generation-function
+[X] 2   generate qrcode in a loop
+[ ] 2.1     get Chalutier state, Keybindings, GPS
+[X] 2.2     end qrcode-generation-function when running_var=false
 
-- always in front
+TODO:
+[ ]  always in front
+[ ]  resize QR Background with table length
+[ ]  blank pixels in _drawQR(key) that are not touched
+[X]  easy resize QRCode
 ]]--
 
-local function _test(eventCode, bookTitle, body, medium, showTitle, bookId)
-    --logger:Warn(bookTitle)
-    local x, y, zoneMapIndex = gps:LocalToGlobal(GetMapPlayerPosition("player"))
-    --local angle = (math.deg(GetPlayerCameraHeading())-180) % 360
-    --localization = string.format("%f : %f : %d", x, y, angle)
-
-    local ok, tab_or_message = qrcode(bookTitle) --THIS IS AN IMPORTANT LINE
-    
-    if not ok then
-        logger:Warn("is NOT ok")
-    else
-        logger:Warn("is ok")
-        --blank
-        for r=0,maxpixels-1 do
-            for c=0,maxpixels-1 do
-                EsoQR.UI.pixel[r][c]:SetHidden(true)
-            end
+--make qr blank
+local function _blankQR()
+    for row=0,maxpixels-1 do
+        for col=0,maxpixels-1 do
+            EsoQR.UI.pixel[row][col]:SetHidden(true)
         end
-        
-        --set
-        for i,ref in pairs(tab_or_message) do
+    end
+end
+
+--draw qr
+local function _drawQR(key)
+    local ok, qrtable = qrcode(key)
+    if ok then
+        for i,ref in pairs(qrtable) do
             for j,val in pairs(ref) do
                 if val < 0 then
                     EsoQR.UI.pixel[i-1][j-1]:SetHidden(true)
@@ -54,9 +52,49 @@ local function _test(eventCode, bookTitle, body, medium, showTitle, bookId)
     end
 end
 
+local function _generateQR()
+    EVENT_MANAGER:UnregisterForUpdate(EsoQR.name)
+    local updatetime_ms = updatetime
+    
+    --get the gps values and form them to a string
+    local x, y, zoneMapIndex = gps:LocalToGlobal(GetMapPlayerPosition("player"))
+    local angle = (math.deg(GetPlayerCameraHeading())-180) % 360
+    local localization = string.format("%f : %f : %d", x, y, angle)
+
+    --draw QRC with new location
+    if EsoQR.oldlocal ~= localization then
+        EsoQR.oldlocal = localization
+        _blankQR()
+        _drawQR(localization)
+        
+    --dont draw QRC when location didn't change
+    else
+        updatetime_ms = updatetime_ms * 2
+    end
+    
+    --wait a moment before running again
+    if EsoQR.run_var then
+        EVENT_MANAGER:RegisterForUpdate(EsoQR.name, updatetime_ms, _generateQR)
+    else
+        _blankQR()
+    end
+end
+
+local function _toggle_running_state()
+    if EsoQR.run_var then
+        EsoQR.run_var = false
+        EsoQR.UI.button:SetNormalTexture(EsoQR.name .. "/img/start_mouseup.dds")
+        EsoQR.UI.button:SetMouseOverTexture(EsoQR.name .. "/img/start_mouseover.dds")
+    else
+        EsoQR.run_var = true
+        EsoQR.UI.button:SetNormalTexture(EsoQR.name .. "/img/start_running.dds")
+        EsoQR.UI.button:SetMouseOverTexture(EsoQR.name .. "/img/start_running.dds")
+        _generateQR()
+    end
+end
+
 function EsoQR.OnAddOnLoaded(event, addonName)
     if addonName == EsoQR.name then
-        logger:Warn("init esoqr")
         EVENT_MANAGER:UnregisterForEvent(EsoQR.name, EVENT_ADD_ON_LOADED)
         
         EsoQR.UI = WINDOW_MANAGER:CreateControl(nil, GuiRoot, CT_TOPLEVELCONTROL)
@@ -88,11 +126,16 @@ function EsoQR.OnAddOnLoaded(event, addonName)
             end
         end
         
-        if debugbool then
-            EVENT_MANAGER:RegisterForEvent(EsoQR.name, EVENT_SHOW_BOOK, _test)
-        end
+        EsoQR.UI.button =  WINDOW_MANAGER:CreateControl(EsoQR.name .. "button", ZO_ChatWindow, CT_BUTTON)
+        EsoQR.UI.button:SetDimensions(20, 20)
+        EsoQR.UI.button:SetAnchor(TOPLEFT, ZO_ChatWindowNotifications, TOPRIGHT, 75, 5)
+        EsoQR.UI.button:SetNormalTexture(EsoQR.name .. "/img/start_mouseup.dds")
+        EsoQR.UI.button:SetPressedTexture(EsoQR.name .. "/img/start_mousedown.dds")
+        EsoQR.UI.button:SetMouseOverTexture(EsoQR.name .. "/img/start_mouseover.dds")
+        EsoQR.run_var = false
+        EsoQR.UI.button:SetHandler("OnClicked", _toggle_running_state)
+                
     end
 end
  
 EVENT_MANAGER:RegisterForEvent(EsoQR.name, EVENT_ADD_ON_LOADED, EsoQR.OnAddOnLoaded)
-logger:Warn("RUN DONE")
