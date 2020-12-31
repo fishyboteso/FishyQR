@@ -5,6 +5,8 @@ EsoQR = {
 }
 
 local gps = LibStub("LibGPS2")
+
+--PARAMS:
 local pixelsize = 3
 local maxpixels = 25
 local updatetime = 400
@@ -22,6 +24,7 @@ local updatetime = 400
 
 TODO:
 [ ]  always in front
+[ ]  ingame addon menu to change params
 [ ]  resize QR Background with table length
 [ ]  blank pixels in _drawQR(key) that are not touched
 [X]  easy resize QRCode
