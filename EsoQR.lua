@@ -148,8 +148,6 @@ function EsoQR.OnAddOnLoaded(event, addonName)
         EsoQR.run_var = false
         EsoQR.UI.button:SetHandler("OnClicked", _toggle_running_state)
 
-        local logger = LibDebugLogger("MyAddon")
-
         --addon menu
         local LAM = LibAddonMenu2
         local panelName = EsoQR.name .. "Settings" -- TODO the name will be used to create a global variable, pick something unique or you may overwrite an existing variable!
