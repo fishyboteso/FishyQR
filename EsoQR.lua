@@ -27,9 +27,9 @@ local EsoQRdefaults = {
 
 TODO:
 [ ]  always in front
-[ ]  ingame addon menu to change params
+[X]  ingame addon menu to change params
 [ ]  resize QR Background with table length
-[ ]  blank pixels in _drawQR(key) that are not touched
+[ ]  blank only pixels in _drawQR(key) that are not touched
 [X]  easy resize QRCode
 ]]--
 
@@ -159,17 +159,17 @@ function EsoQR.OnAddOnLoaded(event, addonName)
         }
         local panel = LAM:RegisterAddonPanel(panelName, panelData)
         local optionsData = {
-            --[[
             {
                 type = "slider",
                 name = "Maximum Pixels",
                 min = 22,
                 max = 30,
                 default = 25,
-                getFunc = function() return params.maxpixels end,
-                setFunc = function(value) params.maxpixels = maxpixels end
+                getFunc = function() return EsoQRparams.maxpixels end,
+                setFunc = function(value) EsoQRparams.maxpixels = value end,
+                tooltip = "Set the maximum of pixels for QR Code that get initialized.",
+                requiresReload = true
             },
-            ]]--
             {
                 type = "slider",
                 name = "Pixel Size",
@@ -186,16 +186,19 @@ function EsoQR.OnAddOnLoaded(event, addonName)
                             EsoQR.UI.pixel[i][j]:SetAnchor(TOPLEFT, EsoQR.UI.background, TOPLEFT, 4+(i*EsoQRparams.pixelsize), 4+(j*EsoQRparams.pixelsize))
                         end
                     end
-                end
+                end,
+                tooltip = "Set the size of each pixel of the QR Code."
             },
             {
                 type = "slider",
                 name = "Updatetime",
                 min = 100,
-                max = 10000,
+                max = 2000,
+                step = 10,
                 default = 400,
                 getFunc = function() return EsoQRparams.updatetime end,
-                setFunc = function(value) EsoQRparams.updatetime = value end
+                setFunc = function(value) EsoQRparams.updatetime = value end,
+                tooltip = "Set the wait time between each QR Code Update."
             }
         }
         LAM:RegisterOptionControls(panelName, optionsData)
