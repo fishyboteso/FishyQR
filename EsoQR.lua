@@ -53,6 +53,11 @@ local function _drawQR(keyString)
         for i,ref in pairs(qrtable) do
             tmpLastPixel = i
             for j,val in pairs(ref) do
+                --Error: not enough pixels allocated
+                if j > EsoQRparams.maxpixels then
+                    return
+                end
+
                 if val < 0 then
                     EsoQR.UI.pixel[i-1][j-1]:SetHidden(true)
                 else
@@ -130,7 +135,7 @@ end
 local function _startState()
     _drawQR("start")
     EsoQR.run_var = true
-    EVENT_MANAGER:RegisterForUpdate(EsoQR.name .. "startStateUpdate", EsoQRparams.updatetime*2, _startStateUpdate)
+    EVENT_MANAGER:RegisterForUpdate(EsoQR.name .. "startStateUpdate", 2000, _startStateUpdate)
 end
 
 local function _toggle_running_state()
@@ -209,8 +214,8 @@ function EsoQR.OnAddOnLoaded(event, addonName)
             {
                 type = "slider",
                 name = "Maximum Pixels",
-                min = 22,
-                max = 30,
+                min = 25,
+                max = 75,
                 default = 25,
                 getFunc = function() return EsoQRparams.maxpixels end,
                 setFunc = function(value) EsoQRparams.maxpixels = value end,
@@ -221,7 +226,7 @@ function EsoQR.OnAddOnLoaded(event, addonName)
                 type = "slider",
                 name = "Pixel Size",
                 min = 1,
-                max = 10,
+                max = 8,
                 default = 2,
                 getFunc = function() return EsoQRparams.pixelsize end,
                 setFunc = function(value)
@@ -240,12 +245,12 @@ function EsoQR.OnAddOnLoaded(event, addonName)
                 type = "slider",
                 name = "Updatetime",
                 min = 100,
-                max = 2000,
-                step = 10,
+                max = 1500,
+                step = 50,
                 default = 400,
                 getFunc = function() return EsoQRparams.updatetime end,
                 setFunc = function(value) EsoQRparams.updatetime = value end,
-                tooltip = "Set the wait time between each QR Code Update."
+                tooltip = "Set the wait time between each QR Code Update in ms."
             }
         }
         LAM:RegisterOptionControls(panelName, optionsData)
