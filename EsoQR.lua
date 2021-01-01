@@ -25,7 +25,8 @@ local EsoQRdefaults = {
 [X] 2.2     end qrcode-generation-function when running_var=false
 
 TODO:
-[ ] always in front
+[ ] add start/stop command to QR
+[X] always in front
 [X] make key-string CSV
 [X] ingame addon menu to change params
 [X] resize QR Background with table length
@@ -108,18 +109,22 @@ local function _generateQR()
 end
 
 local function _toggle_running_state()
-    --if state was running, stop
+    --if state was running: stop
     if EsoQR.run_var then
         EsoQR.run_var = false
         EsoQR.UI.button:SetNormalTexture(EsoQR.name .. "/img/start_mouseup.dds")
         EsoQR.UI.button:SetMouseOverTexture(EsoQR.name .. "/img/start_mouseover.dds")
+        EsoQR.UI:SetDrawLayer(DL_MIN_VALUE)
+        EsoQR.UI:SetDrawTier(DT_MIN_VALUE)
 
-    --if state was stopped, run
+    --if state was stopped: run
     else
         EsoQR.run_var = true
         tmpLocal = ""
         EsoQR.UI.button:SetNormalTexture(EsoQR.name .. "/img/start_running.dds")
         EsoQR.UI.button:SetMouseOverTexture(EsoQR.name .. "/img/start_running.dds")
+        EsoQR.UI:SetDrawLayer(DL_MAX_VALUE)
+        EsoQR.UI:SetDrawTier(DT_MAX_VALUE)
         _generateQR()
     end
 end
@@ -139,8 +144,8 @@ function EsoQR.OnAddOnLoaded(event, addonName)
         EsoQR.UI:SetMovable(true)
         EsoQR.UI:SetDimensions(64, 92)
         EsoQR.UI:SetDrawLevel(0)
-        EsoQR.UI:SetDrawLayer(0)
-        EsoQR.UI:SetDrawTier(0)
+        EsoQR.UI:SetDrawLayer(DL_MAX_VALUE)
+        EsoQR.UI:SetDrawTier(DT_MAX_VALUE)
         
         EsoQR.UI.background = WINDOW_MANAGER:CreateControl(nil, EsoQR.UI, CT_TEXTURE)
         EsoQR.UI.background:SetDimensions(4 + EsoQRparams.maxpixels*EsoQRparams.pixelsize + 4, 4 + EsoQRparams.maxpixels*EsoQRparams.pixelsize + 4)
@@ -158,7 +163,7 @@ function EsoQR.OnAddOnLoaded(event, addonName)
                 EsoQR.UI.pixel[i][j]:SetColor(0, 0, 0)
                 EsoQR.UI.pixel[i][j]:SetAnchor(TOPLEFT, EsoQR.UI.background, TOPLEFT, 4+(i*EsoQRparams.pixelsize), 4+(j*EsoQRparams.pixelsize))
                 EsoQR.UI.pixel[i][j]:SetHidden(true)
-                EsoQR.UI.pixel[i][j]:SetDrawLevel(1)
+                EsoQR.UI.pixel[i][j]:SetDrawLevel(0)
             end
         end
         
