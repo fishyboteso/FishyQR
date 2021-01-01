@@ -1,7 +1,6 @@
 EsoQR = {
     name = "EsoQR",
     run_var = false,
-    oldlocal = ""
 }
 
 local gps = LibStub("LibGPS2")
@@ -13,6 +12,7 @@ local EsoQRdefaults = {
     maxpixels = 25,
     updatetime = 400
 }
+local tmpLocal = ""
 
 --[[
 [X] 0.  add button
@@ -28,8 +28,8 @@ local EsoQRdefaults = {
 TODO:
 [ ]  always in front
 [X]  ingame addon menu to change params
-[ ]  resize QR Background with table length
-[ ]  blank only pixels in _drawQR(key) that are not touched
+[X]  resize QR Background with table length
+[X]  blank only pixels in _drawQR(key) that are not touched
 [X]  easy resize QRCode
 ]]--
 
@@ -45,8 +45,11 @@ end
 --draw qr
 local function _drawQR(key)
     local ok, qrtable = qrcode(key)
+    local tmpLastPixel = 0
     if ok then
+        --set pixels
         for i,ref in pairs(qrtable) do
+            tmpLastPixel = i
             for j,val in pairs(ref) do
                 if val < 0 then
                     EsoQR.UI.pixel[i-1][j-1]:SetHidden(true)
@@ -55,6 +58,23 @@ local function _drawQR(key)
                 end
             end
         end
+        
+        --make unused pixels blank
+        if tmpLastPixel < EsoQRparams.maxpixels then
+            for i = 1, tmpLastPixel do
+                for j = tmpLastPixel+1, EsoQRparams.maxpixels do
+                    EsoQR.UI.pixel[i-1][j-1]:SetHidden(true)
+                end
+            end
+            for i = tmpLastPixel+1, EsoQRparams.maxpixels do
+                for j = 1, EsoQRparams.maxpixels do
+                    EsoQR.UI.pixel[i-1][j-1]:SetHidden(true)
+                end
+            end
+        end
+        
+        --resize background
+        EsoQR.UI.background:SetDimensions(4 + tmpLastPixel*EsoQRparams.pixelsize + 4, 4 + tmpLastPixel*EsoQRparams.pixelsize + 4)
     end
 end
 
@@ -68,12 +88,12 @@ local function _generateQR()
     local localization = string.format("%f : %f : %d", x, y, angle)
 
     --draw QRC with new location
-    if EsoQR.oldlocal ~= localization then
-        EsoQR.oldlocal = localization
-        _blankQR()
+    if tmpLocal ~= localization then
+        tmpLocal = localization
+        --_blankQR()
         _drawQR(localization)
         
-    --dont draw QRC when location didn't change
+    --dont draw QRC when location didn't change, wait twice
     else
         updatetime_ms = updatetime_ms * 2
     end
@@ -87,13 +107,16 @@ local function _generateQR()
 end
 
 local function _toggle_running_state()
+    --if state was running, stop
     if EsoQR.run_var then
         EsoQR.run_var = false
         EsoQR.UI.button:SetNormalTexture(EsoQR.name .. "/img/start_mouseup.dds")
         EsoQR.UI.button:SetMouseOverTexture(EsoQR.name .. "/img/start_mouseover.dds")
+
+    --if state was stopped, run
     else
         EsoQR.run_var = true
-        EsoQR.oldlocal = ""
+        tmpLocal = ""
         EsoQR.UI.button:SetNormalTexture(EsoQR.name .. "/img/start_running.dds")
         EsoQR.UI.button:SetMouseOverTexture(EsoQR.name .. "/img/start_running.dds")
         _generateQR()
@@ -105,7 +128,7 @@ function EsoQR.OnAddOnLoaded(event, addonName)
         --init once and never come here again
         EVENT_MANAGER:UnregisterForEvent(EsoQR.name, EVENT_ADD_ON_LOADED)
         
-        --load settings
+        --load params variable
         EsoQRparams = ZO_SavedVars:NewAccountWide("EsoQRparamsvar", 1, nil, EsoQRdefaults)
         
         --create qr ui code elements
@@ -119,7 +142,7 @@ function EsoQR.OnAddOnLoaded(event, addonName)
         EsoQR.UI:SetDrawTier(0)
         
         EsoQR.UI.background = WINDOW_MANAGER:CreateControl(nil, EsoQR.UI, CT_TEXTURE)
-        EsoQR.UI.background:SetDimensions(4 + EsoQRparams.maxpixels*EsoQRparams.pixelsize + 4, 4 + EsoQRparams.maxpixels*EsoQRparams.pixelsize + 4) -- 4 + 25*2 + 4
+        EsoQR.UI.background:SetDimensions(4 + EsoQRparams.maxpixels*EsoQRparams.pixelsize + 4, 4 + EsoQRparams.maxpixels*EsoQRparams.pixelsize + 4)
         EsoQR.UI.background:SetColor(1, 1, 1)
         EsoQR.UI.background:SetAnchor(TOPLEFT, EsoQR.UI, TOPLEFT, 0, 0)
         EsoQR.UI.background:SetHidden(false)
@@ -150,7 +173,7 @@ function EsoQR.OnAddOnLoaded(event, addonName)
 
         --addon menu
         local LAM = LibAddonMenu2
-        local panelName = EsoQR.name .. "Settings" -- TODO the name will be used to create a global variable, pick something unique or you may overwrite an existing variable!
+        local panelName = EsoQR.name .. "Settings"
          
         local panelData = {
             type = "panel",
@@ -179,7 +202,7 @@ function EsoQR.OnAddOnLoaded(event, addonName)
                 getFunc = function() return EsoQRparams.pixelsize end,
                 setFunc = function(value)
                     EsoQRparams.pixelsize = value
-                    EsoQR.UI.background:SetDimensions(4 + EsoQRparams.maxpixels*EsoQRparams.pixelsize + 4, 4 + EsoQRparams.maxpixels*EsoQRparams.pixelsize + 4) -- 4 + 25*2 + 4
+                    EsoQR.UI.background:SetDimensions(4 + EsoQRparams.maxpixels*EsoQRparams.pixelsize + 4, 4 + EsoQRparams.maxpixels*EsoQRparams.pixelsize + 4)
                     for i = 0,EsoQRparams.maxpixels-1 do
                         for j = 0,EsoQRparams.maxpixels-1 do
                             EsoQR.UI.pixel[i][j]:SetDimensions(EsoQRparams.pixelsize, EsoQRparams.pixelsize)
