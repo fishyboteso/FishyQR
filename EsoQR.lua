@@ -12,7 +12,6 @@ local EsoQRdefaults = {
     maxpixels = 25,
     updatetime = 400
 }
-local tmpLocal = ""
 
 --[[
 [X] 0.  add button
@@ -26,11 +25,12 @@ local tmpLocal = ""
 [X] 2.2     end qrcode-generation-function when running_var=false
 
 TODO:
-[ ]  always in front
-[X]  ingame addon menu to change params
-[X]  resize QR Background with table length
-[X]  blank only pixels in _drawQR(key) that are not touched
-[X]  easy resize QRCode
+[ ] always in front
+[X] make key-string CSV
+[X] ingame addon menu to change params
+[X] resize QR Background with table length
+[X] blank only pixels in _drawQR(keyString) that are not touched
+[X] easy resize QRCode
 ]]--
 
 --make qr blank
@@ -43,8 +43,8 @@ local function _blankQR()
 end
 
 --draw qr
-local function _drawQR(key)
-    local ok, qrtable = qrcode(key)
+local function _drawQR(keyString)
+    local ok, qrtable = qrcode(keyString)
     local tmpLastPixel = 0
     if ok then
         --set pixels
@@ -78,6 +78,7 @@ local function _drawQR(key)
     end
 end
 
+local tmpKeyString = ""
 local function _generateQR()
     EVENT_MANAGER:UnregisterForUpdate(EsoQR.name)
     local updatetime_ms = EsoQRparams.updatetime
@@ -85,13 +86,13 @@ local function _generateQR()
     --get the gps values and form them to a string
     local x, y, zoneMapIndex = gps:LocalToGlobal(GetMapPlayerPosition("player"))
     local angle = (math.deg(GetPlayerCameraHeading())-180) % 360
-    local localization = string.format("%f : %f : %d", x, y, angle)
+    local keyString = string.format("%f,%f,%d", x, y, angle) -- add all data here
 
     --draw QRC with new location
-    if tmpLocal ~= localization then
-        tmpLocal = localization
+    if tmpKeyString ~= keyString then
+        tmpKeyString = keyString
         --_blankQR()
-        _drawQR(localization)
+        _drawQR(tmpKeyString)
         
     --dont draw QRC when location didn't change, wait twice
     else
