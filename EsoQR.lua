@@ -81,7 +81,6 @@ local function _drawQR(keyString)
 end
 
 local tmpKeyString = ""
-local running = false
 local function _generateQR(keyString)
     EVENT_MANAGER:UnregisterForUpdate(EsoQR.name .. "generateQR")
     local updatetime_ms = EsoQRparams.updatetime
