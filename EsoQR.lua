@@ -25,7 +25,7 @@ local EsoQRdefaults = {
 [X] 2.2     end qrcode-generation-function when running_var=false
 
 TODO:
-[ ] add start/stop command to QR
+[X] add start/stop command to QR
 [X] always in front
 [X] make key-string CSV
 [X] ingame addon menu to change params
@@ -34,6 +34,7 @@ TODO:
 [X] easy resize QRCode
 ]]--
 
+-- QR -------------------------------
 --make qr blank
 local function _blankQR()
     for row=0,EsoQRparams.maxpixels-1 do
@@ -80,8 +81,9 @@ local function _drawQR(keyString)
 end
 
 local tmpKeyString = ""
-local function _generateQR()
-    EVENT_MANAGER:UnregisterForUpdate(EsoQR.name)
+local running = false
+local function _generateQR(keyString)
+    EVENT_MANAGER:UnregisterForUpdate(EsoQR.name .. "generateQR")
     local updatetime_ms = EsoQRparams.updatetime
     
     --get the gps values and form them to a string
@@ -102,33 +104,48 @@ local function _generateQR()
     
     --wait a moment before running again
     if EsoQR.run_var then
-        EVENT_MANAGER:RegisterForUpdate(EsoQR.name, updatetime_ms, _generateQR)
+        EVENT_MANAGER:RegisterForUpdate(EsoQR.name .. "generateQR", updatetime_ms, _generateQR)
     else
         _blankQR()
     end
 end
 
-local function _toggle_running_state()
-    --if state was running: stop
-    if EsoQR.run_var then
-        EsoQR.run_var = false
-        EsoQR.UI.button:SetNormalTexture(EsoQR.name .. "/img/start_mouseup.dds")
-        EsoQR.UI.button:SetMouseOverTexture(EsoQR.name .. "/img/start_mouseover.dds")
-        EsoQR.UI:SetDrawLayer(DL_MIN_VALUE)
-        EsoQR.UI:SetDrawTier(DT_MIN_VALUE)
+-- STATES ----------------------------
+local function _stopState()
+    EsoQR.run_var = false
+    EVENT_MANAGER:UnregisterForUpdate(EsoQR.name .. "startStateUpdate")
+    EVENT_MANAGER:UnregisterForUpdate(EsoQR.name .. "generateQR")
+    _drawQR("stop")
+    EsoQR.UI.button:SetNormalTexture(EsoQR.name .. "/img/start_mouseup.dds")
+    EsoQR.UI.button:SetMouseOverTexture(EsoQR.name .. "/img/start_mouseover.dds")
+end
 
-    --if state was stopped: run
+local function _startStateUpdate()
+    EVENT_MANAGER:UnregisterForUpdate(EsoQR.name .. "startStateUpdate")
+    tmpKeyString = ""
+    EsoQR.UI.button:SetNormalTexture(EsoQR.name .. "/img/start_running.dds")
+    EsoQR.UI.button:SetMouseOverTexture(EsoQR.name .. "/img/start_running.dds")
+    _generateQR()
+end
+
+local function _startState()
+    _drawQR("start")
+    EsoQR.run_var = true
+    EVENT_MANAGER:RegisterForUpdate(EsoQR.name .. "startStateUpdate", EsoQRparams.updatetime*2, _startStateUpdate)
+end
+
+local function _toggle_running_state()
+    --if state was running: stop and hide
+    if EsoQR.run_var then
+        _stopState()
+
+    --if state was stopped: run and show
     else
-        EsoQR.run_var = true
-        tmpLocal = ""
-        EsoQR.UI.button:SetNormalTexture(EsoQR.name .. "/img/start_running.dds")
-        EsoQR.UI.button:SetMouseOverTexture(EsoQR.name .. "/img/start_running.dds")
-        EsoQR.UI:SetDrawLayer(DL_MAX_VALUE)
-        EsoQR.UI:SetDrawTier(DT_MAX_VALUE)
-        _generateQR()
+        _startState()
     end
 end
 
+-- INIT -----------------------------
 function EsoQR.OnAddOnLoaded(event, addonName)
     if addonName == EsoQR.name then
         --init once and never come here again
@@ -166,6 +183,8 @@ function EsoQR.OnAddOnLoaded(event, addonName)
                 EsoQR.UI.pixel[i][j]:SetDrawLevel(0)
             end
         end
+        
+        _drawQR("stop")
         
         --add start button
         EsoQR.UI.button =  WINDOW_MANAGER:CreateControl(EsoQR.name .. "button", ZO_ChatWindow, CT_BUTTON)
