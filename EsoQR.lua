@@ -93,7 +93,7 @@ local function _generateQR(keyString)
     --get the gps values and form them to a string
     local x, y, zoneMapIndex = gps:LocalToGlobal(GetMapPlayerPosition("player"))
     local angle = (math.deg(GetPlayerCameraHeading())-180) % 360
-    local keyString = string.format("%f,%f,%d", x, y, angle) -- add all data here
+    local keyString = string.format("%f,%f,%d,%d", x, y, angle, ProvCha.currentState) -- add all data here
 
     --draw QRC with new location
     if tmpKeyString ~= keyString then
