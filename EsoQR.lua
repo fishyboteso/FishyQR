@@ -88,6 +88,7 @@ end
 local tmpKeyString = ""
 local function _generateQR(keyString)
     EVENT_MANAGER:UnregisterForUpdate(EsoQR.name .. "generateQR")
+    ProvCha.CallbackManager:UnregisterCallback(ProvCha.name .. "StateChange", callback)
     local updatetime_ms = EsoQRparams.updatetime
     
     --get the gps values and form them to a string
@@ -109,6 +110,7 @@ local function _generateQR(keyString)
     --wait a moment before running again
     if EsoQR.run_var then
         EVENT_MANAGER:RegisterForUpdate(EsoQR.name .. "generateQR", updatetime_ms, _generateQR)
+        ProvCha.CallbackManager:RegisterCallback(ProvCha.name .. "StateChange", callback)
     else
         _blankQR()
     end
