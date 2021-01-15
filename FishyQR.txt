@@ -1,0 +1,11 @@
+## Title: Fishy QR
+## Author: Semjon Kerner
+## APIVersion: 100028
+## Version: 1.0.0
+## AddOnVersion: 100
+## DependsOn: LibGPS>=65 LibAddonMenu-2.0>=30
+## SavedVariables: FishyQRparamsvar
+
+luaqrcode\qrencode.lua
+Chalutier.lua
+FishyQR.lua
