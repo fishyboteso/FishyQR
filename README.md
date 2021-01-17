@@ -4,7 +4,9 @@ FishyQR is an Addon for Elder Scrolls Online printing out miscellaneous data as 
 
 It employs the public lua library http://speedata.github.io/luaqrcode/ for qrcode generation.
 
-Note that usage of Addons to extract game data in realtime is not always approved by ZOS and might be mandated not to be used.
+Clone with `git clone --recurse-submodules` to get the necessary luaqrcode library.
+
+__Note__ that usage of Addons to extract game data in realtime is not always approved by ZOS and might be mandated not to be used.
 
 ### Author
 This Add-On is not created by, affiliated with or sponsored by ZeniMax Media Inc. or its affiliates.
