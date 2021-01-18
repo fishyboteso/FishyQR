@@ -100,25 +100,18 @@ end
 -- STATES ----------------------------
 local function _stopState()
     FishyQR.run_var = false
-    EVENT_MANAGER:UnregisterForUpdate(FishyQR.name .. "startStateUpdate")
     EVENT_MANAGER:UnregisterForUpdate(FishyQR.name .. "generateQR")
     _drawQR("stop")
     FishyQR.UI.button:SetNormalTexture(FishyQR.name .. "/img/start_mouseup.dds")
     FishyQR.UI.button:SetMouseOverTexture(FishyQR.name .. "/img/start_mouseover.dds")
 end
 
-local function _startStateUpdate()
-    EVENT_MANAGER:UnregisterForUpdate(FishyQR.name .. "startStateUpdate")
+local function _startState()
+    FishyQR.run_var = true
     tmpKeyString = ""
     FishyQR.UI.button:SetNormalTexture(FishyQR.name .. "/img/start_running.dds")
     FishyQR.UI.button:SetMouseOverTexture(FishyQR.name .. "/img/start_running.dds")
     _generateQR()
-end
-
-local function _startState()
-    _drawQR("start")
-    FishyQR.run_var = true
-    EVENT_MANAGER:RegisterForUpdate(FishyQR.name .. "startStateUpdate", 2000, _startStateUpdate)
 end
 
 local function _toggle_running_state()
