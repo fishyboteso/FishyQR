@@ -13,6 +13,8 @@ local FishyQRdefaults = {
     maxpixels = 25,
     updatetime = 400
 }
+local brdr = 4
+local text = 20
 
 -- QR -------------------------------
 --make qr blank
@@ -26,6 +28,7 @@ end
 
 --draw qr
 local function _drawQR(keyString)
+    FishyQR.UI.label:SetText(keyString)
     local ok, qrtable = qrcode(keyString)
     local tmpLastPixel = 0
     if ok then
@@ -61,7 +64,7 @@ local function _drawQR(keyString)
         end
         
         --resize background
-        FishyQR.UI.background:SetDimensions(4 + tmpLastPixel*FishyQRparams.pixelsize + 4, 4 + tmpLastPixel*FishyQRparams.pixelsize + 4)
+        FishyQR.UI.background:SetDimensions(2*brdr + tmpLastPixel*FishyQRparams.pixelsize, 3*brdr + tmpLastPixel*FishyQRparams.pixelsize + text)
     end
 end
 
@@ -138,17 +141,20 @@ function FishyQR.OnAddOnLoaded(event, addonName)
         fishyChaInit()
 
         --create qr ui code elements
+
+        local dim = brdr + FishyQRparams.maxpixels*FishyQRparams.pixelsize + brdr
+
         FishyQR.UI = WINDOW_MANAGER:CreateControl(nil, GuiRoot, CT_TOPLEVELCONTROL)
         FishyQR.UI:SetMouseEnabled(true)
         FishyQR.UI:SetClampedToScreen(true)
         FishyQR.UI:SetMovable(true)
-        FishyQR.UI:SetDimensions(64, 92)
+        FishyQR.UI:SetDimensions(dim, dim + text + brdr)
         FishyQR.UI:SetDrawLevel(0)
         FishyQR.UI:SetDrawLayer(DL_MAX_VALUE)
         FishyQR.UI:SetDrawTier(DT_MAX_VALUE)
         
         FishyQR.UI.background = WINDOW_MANAGER:CreateControl(nil, FishyQR.UI, CT_TEXTURE)
-        FishyQR.UI.background:SetDimensions(4 + FishyQRparams.maxpixels*FishyQRparams.pixelsize + 4, 4 + FishyQRparams.maxpixels*FishyQRparams.pixelsize + 4)
+        FishyQR.UI.background:SetDimensions(dim, dim + text + brdr)
         FishyQR.UI.background:SetColor(1, 1, 1)
         FishyQR.UI.background:SetAnchor(TOPLEFT, FishyQR.UI, TOPLEFT, 0, 0)
         FishyQR.UI.background:SetHidden(false)
@@ -161,23 +167,31 @@ function FishyQR.OnAddOnLoaded(event, addonName)
                 FishyQR.UI.pixel[i][j] = WINDOW_MANAGER:CreateControl(nil, FishyQR.UI, CT_TEXTURE)
                 FishyQR.UI.pixel[i][j]:SetDimensions(FishyQRparams.pixelsize, FishyQRparams.pixelsize)
                 FishyQR.UI.pixel[i][j]:SetColor(0, 0, 0)
-                FishyQR.UI.pixel[i][j]:SetAnchor(TOPLEFT, FishyQR.UI.background, TOPLEFT, 4+(i*FishyQRparams.pixelsize), 4+(j*FishyQRparams.pixelsize))
+                FishyQR.UI.pixel[i][j]:SetAnchor(TOPLEFT, FishyQR.UI.background, TOPLEFT, brdr+(i*FishyQRparams.pixelsize), brdr+(j*FishyQRparams.pixelsize))
                 FishyQR.UI.pixel[i][j]:SetHidden(true)
                 FishyQR.UI.pixel[i][j]:SetDrawLevel(0)
             end
         end
         
-        _drawQR("stop")
-        
         --add start button
-        FishyQR.UI.button =  WINDOW_MANAGER:CreateControl(FishyQR.name .. "button", ZO_ChatWindow, CT_BUTTON)
-        FishyQR.UI.button:SetDimensions(20, 20)
-        FishyQR.UI.button:SetAnchor(TOPLEFT, ZO_ChatWindowNotifications, TOPRIGHT, 75, 5)
+        FishyQR.UI.label = WINDOW_MANAGER:CreateControl(FishyQR.name .. "label", FishyQR.UI, CT_LABEL)
+        FishyQR.UI.label:SetFont("ZoFontChat")
+        FishyQR.UI.label:SetColor(0,0,0)
+        FishyQR.UI.label:SetVerticalAlignment(TEXT_ALIGN_CENTER)
+        FishyQR.UI.label:SetHorizontalAlignment(TEXT_ALIGN_RIGHT)
+        FishyQR.UI.label:SetScale(0.7)
+        FishyQR.UI.label:SetAnchor(BOTTOMRIGHT, FishyQR.UI.background, BOTTOMRIGHT, 0-(text+2*brdr), 0-brdr)
+
+        FishyQR.UI.button = WINDOW_MANAGER:CreateControl(FishyQR.name .. "button", FishyQR.UI, CT_BUTTON)
+        FishyQR.UI.button:SetDimensions(text, text)
+        FishyQR.UI.button:SetAnchor(BOTTOMRIGHT, FishyQR.UI.background, BOTTOMRIGHT, 0-brdr, 0-brdr)
         FishyQR.UI.button:SetNormalTexture(FishyQR.name .. "/img/start_mouseup.dds")
         FishyQR.UI.button:SetPressedTexture(FishyQR.name .. "/img/start_mousedown.dds")
         FishyQR.UI.button:SetMouseOverTexture(FishyQR.name .. "/img/start_mouseover.dds")
         FishyQR.run_var = false
         FishyQR.UI.button:SetHandler("OnClicked", _toggle_running_state)
+
+        _drawQR("stop")
 
         --addon menu
         local LAM = LibAddonMenu2
@@ -210,11 +224,14 @@ function FishyQR.OnAddOnLoaded(event, addonName)
                 getFunc = function() return FishyQRparams.pixelsize end,
                 setFunc = function(value)
                     FishyQRparams.pixelsize = value
-                    FishyQR.UI.background:SetDimensions(4 + FishyQRparams.maxpixels*FishyQRparams.pixelsize + 4, 4 + FishyQRparams.maxpixels*FishyQRparams.pixelsize + 4)
+                    FishyQR.UI:SetDimensions(2*brdr + FishyQRparams.maxpixels*FishyQRparams.pixelsize, 3*brdr + FishyQRparams.maxpixels*FishyQRparams.pixelsize + text)
+                    FishyQR.UI.background:SetDimensions(2*brdr + FishyQRparams.maxpixels*FishyQRparams.pixelsize, 3*brdr + FishyQRparams.maxpixels*FishyQRparams.pixelsize + text)
+                    FishyQR.UI.label:SetAnchor(BOTTOMRIGHT, FishyQR.UI.background, BOTTOMRIGHT, 0-(text+2*brdr), 0-brdr)
+                    FishyQR.UI.button:SetAnchor(BOTTOMRIGHT, FishyQR.UI.background, BOTTOMRIGHT, 0-brdr, 0-brdr)
                     for i = 0,FishyQRparams.maxpixels-1 do
                         for j = 0,FishyQRparams.maxpixels-1 do
                             FishyQR.UI.pixel[i][j]:SetDimensions(FishyQRparams.pixelsize, FishyQRparams.pixelsize)
-                            FishyQR.UI.pixel[i][j]:SetAnchor(TOPLEFT, FishyQR.UI.background, TOPLEFT, 4+(i*FishyQRparams.pixelsize), 4+(j*FishyQRparams.pixelsize))
+                            FishyQR.UI.pixel[i][j]:SetAnchor(TOPLEFT, FishyQR.UI.background, TOPLEFT, brdr+(i*FishyQRparams.pixelsize), brdr+(j*FishyQRparams.pixelsize))
                         end
                     end
                 end,
