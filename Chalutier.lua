@@ -19,17 +19,23 @@ local function changeState(state, overwrite)
 
     if FishyCha.currentState == FishyCha_STATE_FIGHT and not overwrite then return end
 
-    EVENT_MANAGER:UnregisterForUpdate(FishyCha.name .. "antiJobFictif")
+    EVENT_MANAGER:UnregisterForUpdate(FishyCha.name .. "STATE_REELIN")
+    EVENT_MANAGER:UnregisterForUpdate(FishyCha.name .. "STATE_FISHING")
     EVENT_MANAGER:UnregisterForEvent(FishyCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
 
     if state == FishyCha_STATE_FISHING then
         LOOT_SCENE:RegisterCallback("StateChange", _fishyChaLootSceneCB)
+        --inventory opens
         EVENT_MANAGER:RegisterForEvent(FishyCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE, function()
             if FishyCha.currentState == FishyCha_STATE_FISHING then changeState(FishyCha_STATE_REELIN) end
         end)
+        --avoid fishing interrupted badly
+        EVENT_MANAGER:RegisterForUpdate(FishyCha.name .. "STATE_FISHING", 28000, function()
+            if FishyCha.currentState == FishyCha_STATE_FISHING then changeState(FishyCha_STATE_IDLE) end
+        end)
 
     elseif state == FishyCha_STATE_REELIN then
-        EVENT_MANAGER:RegisterForUpdate(FishyCha.name .. "antiJobFictif", 3000, function()
+        EVENT_MANAGER:RegisterForUpdate(FishyCha.name .. "STATE_REELIN", 3000, function()
             if FishyCha.currentState == FishyCha_STATE_REELIN then changeState(FishyCha_STATE_IDLE) end
         end)
 
