@@ -4,7 +4,7 @@ FishyQR = {
     run_var = false
 }
 
-local gps = LibStub("LibGPS2")
+local gps = LibGPS3
 
 --PARAMS:
 local FishyQRparams = {}
@@ -71,19 +71,16 @@ end
 local tmpKeyString = ""
 local function _generateQR(keyString)
     EVENT_MANAGER:UnregisterForUpdate(FishyQR.name .. "generateQR")
-    FishyCha.CallbackManager:UnregisterCallback(FishyQR.name .. "ChaStateChange", callback)
     local updatetime_ms = FishyQRparams.updatetime
     
     --get the gps values and form them to a string
     local x, y, zoneMapIndex = gps:LocalToGlobal(GetMapPlayerPosition("player"))
     local angle = (math.deg(GetPlayerCameraHeading())-180) % 360
-    local keyString = string.format("%f,%f,%d,%d", x, y, angle, FishyCha.currentState) -- add all data here
-    --local keyString = string.format("%f,%f,%d", x, y, angle) -- add all data here
+    local keyString = string.format("%f,%f,%d", x, y, angle) -- add all data here
 
     --draw QRC with new location
     if tmpKeyString ~= keyString then
         tmpKeyString = keyString
-        --_blankQR()
         _drawQR(tmpKeyString)
         
     --dont draw QRC when location didn't change, wait twice
@@ -94,7 +91,6 @@ local function _generateQR(keyString)
     --wait a moment before running again
     if FishyQR.run_var then
         EVENT_MANAGER:RegisterForUpdate(FishyQR.name .. "generateQR", updatetime_ms, _generateQR)
-        FishyCha.CallbackManager:RegisterCallback(FishyQR.name .. "ChaStateChange", callback)
     else
         _blankQR()
     end
@@ -137,9 +133,6 @@ function FishyQR.OnAddOnLoaded(event, addonName)
         --load params variable
         FishyQRparams = ZO_SavedVars:NewAccountWide("FishyQRparamsvar", 1, nil, FishyQRdefaults)
         
-        --init chalutier
-        fishyChaInit()
-
         --create qr ui code elements
 
         local dim = brdr + FishyQRparams.maxpixels*FishyQRparams.pixelsize + brdr
