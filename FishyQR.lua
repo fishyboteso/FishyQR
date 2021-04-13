@@ -1,7 +1,6 @@
 FishyQR = {
     name = "FishyQR",
-    author = "Semjon Kerner",
-    run_var = false
+    author = "Semjon Kerner"
 }
 
 local gps = LibGPS3
@@ -11,20 +10,14 @@ local FishyQRparams = {}
 local FishyQRdefaults = {
     pixelsize = 3,
     maxpixels = 25,
-    updatetime = 400
+    updatetime = 100,
+    posx        = 0,
+    posy        = 0,
 }
 local brdr = 4
 local text = 20
 
 -- QR -------------------------------
---make qr blank
-local function _blankQR()
-    for row=0,FishyQRparams.maxpixels-1 do
-        for col=0,FishyQRparams.maxpixels-1 do
-            FishyQR.UI.pixel[row][col]:SetHidden(true)
-        end
-    end
-end
 
 --draw qr
 local function _drawQR(keyString)
@@ -69,9 +62,7 @@ local function _drawQR(keyString)
 end
 
 local tmpKeyString = ""
-local function _generateQR(keyString)
-    EVENT_MANAGER:UnregisterForUpdate(FishyQR.name .. "generateQR")
-    local updatetime_ms = FishyQRparams.updatetime
+local function _generateQR()
     
     --get the gps values and form them to a string
     local x, y, zoneMapIndex = gps:LocalToGlobal(GetMapPlayerPosition("player"))
@@ -82,47 +73,9 @@ local function _generateQR(keyString)
     if tmpKeyString ~= keyString then
         tmpKeyString = keyString
         _drawQR(tmpKeyString)
-        
-    --dont draw QRC when location didn't change, wait twice
-    else
-        updatetime_ms = updatetime_ms * 2
-    end
-    
-    --wait a moment before running again
-    if FishyQR.run_var then
-        EVENT_MANAGER:RegisterForUpdate(FishyQR.name .. "generateQR", updatetime_ms, _generateQR)
-    else
-        _blankQR()
     end
 end
 
--- STATES ----------------------------
-local function _stopState()
-    FishyQR.run_var = false
-    EVENT_MANAGER:UnregisterForUpdate(FishyQR.name .. "generateQR")
-    _drawQR("stop")
-    FishyQR.UI.button:SetNormalTexture(FishyQR.name .. "/img/start_mouseup.dds")
-    FishyQR.UI.button:SetMouseOverTexture(FishyQR.name .. "/img/start_mouseover.dds")
-end
-
-local function _startState()
-    FishyQR.run_var = true
-    tmpKeyString = ""
-    FishyQR.UI.button:SetNormalTexture(FishyQR.name .. "/img/start_running.dds")
-    FishyQR.UI.button:SetMouseOverTexture(FishyQR.name .. "/img/start_running.dds")
-    _generateQR()
-end
-
-local function _toggle_running_state()
-    --if state was running: stop and hide
-    if FishyQR.run_var then
-        _stopState()
-
-    --if state was stopped: run and show
-    else
-        _startState()
-    end
-end
 
 -- INIT -----------------------------
 function FishyQR.OnAddOnLoaded(event, addonName)
@@ -143,8 +96,11 @@ function FishyQR.OnAddOnLoaded(event, addonName)
         FishyQR.UI:SetMovable(true)
         FishyQR.UI:SetDimensions(dim, dim + text + brdr)
         FishyQR.UI:SetDrawLevel(0)
-        FishyQR.UI:SetDrawLayer(DL_MAX_VALUE)
-        FishyQR.UI:SetDrawTier(DT_MAX_VALUE)
+        FishyQR.UI:SetDrawLayer(DL_MAX_VALUE-1)
+        FishyQR.UI:SetDrawTier(DT_MAX_VALUE-1)
+
+        FishyQR.UI:ClearAnchors()
+        FishyQR.UI:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, FishyQRparams.posx, FishyQRparams.posy)
         
         FishyQR.UI.background = WINDOW_MANAGER:CreateControl(nil, FishyQR.UI, CT_TEXTURE)
         FishyQR.UI.background:SetDimensions(dim, dim + text + brdr)
@@ -175,17 +131,14 @@ function FishyQR.OnAddOnLoaded(event, addonName)
         FishyQR.UI.label:SetScale(0.7)
         FishyQR.UI.label:SetAnchor(BOTTOMRIGHT, FishyQR.UI.background, BOTTOMRIGHT, 0-(text+2*brdr), 0-brdr)
 
-        FishyQR.UI.button = WINDOW_MANAGER:CreateControl(FishyQR.name .. "button", FishyQR.UI, CT_BUTTON)
-        FishyQR.UI.button:SetDimensions(text, text)
-        FishyQR.UI.button:SetAnchor(BOTTOMRIGHT, FishyQR.UI.background, BOTTOMRIGHT, 0-brdr, 0-brdr)
-        FishyQR.UI.button:SetNormalTexture(FishyQR.name .. "/img/start_mouseup.dds")
-        FishyQR.UI.button:SetPressedTexture(FishyQR.name .. "/img/start_mousedown.dds")
-        FishyQR.UI.button:SetMouseOverTexture(FishyQR.name .. "/img/start_mouseover.dds")
-        FishyQR.run_var = false
-        FishyQR.UI.button:SetHandler("OnClicked", _toggle_running_state)
+        EVENT_MANAGER:RegisterForUpdate(FishyQR.name .. "generateQR", FishyQRparams.updatetime, _generateQR)
 
-        _drawQR("stop")
+        EVENT_MANAGER:RegisterForUpdate(FishyQR.name .. "savePos", 3000, function()
+            FishyQRparams.posy = FishyQR.UI:GetTop()
+            FishyQRparams.posx = FishyQR.UI:GetLeft()
+        end)
 
+        --#region addon menu
         --addon menu
         local LAM = LibAddonMenu2
         local panelName = FishyQR.name .. "Settings"
@@ -243,7 +196,7 @@ function FishyQR.OnAddOnLoaded(event, addonName)
             }
         }
         LAM:RegisterOptionControls(panelName, optionsData)
-        
+        --#endregion
     end
 end
  
