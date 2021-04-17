@@ -14,7 +14,7 @@ local FishyQRdefaults = {
     posx        = 0,
     posy        = 0,
 }
-local brdr = 4
+local brdr = 10
 local text = 20
 
 -- QR -------------------------------
@@ -99,7 +99,7 @@ function FishyQR.OnAddOnLoaded(event, addonName)
         FishyQR.UI:SetDrawTier(DT_MAX_VALUE-1)
 
         FishyQR.UI:ClearAnchors()
-        FishyQR.UI:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, FishyQRparams.posx, FishyQRparams.posy)
+        FishyQR.UI:SetAnchor(TOPRIGHT, GuiRoot, TOPRIGHT, FishyQRparams.posx, FishyQRparams.posy)
 
         FishyQR.UI.background = WINDOW_MANAGER:CreateControl(nil, FishyQR.UI, CT_TEXTURE)
         FishyQR.UI.background:SetDimensions(dim, dim + text + brdr)
@@ -125,14 +125,14 @@ function FishyQR.OnAddOnLoaded(event, addonName)
         FishyQR.UI.label = WINDOW_MANAGER:CreateControl(FishyQR.name .. "label", FishyQR.UI, CT_LABEL)
         FishyQR.UI.label:SetFont("ZoFontChat")
         FishyQR.UI.label:SetColor(0,0,0)
-        FishyQR.UI.label:SetAnchor(CENTER, FishyQR.UI.background, BOTTOM, 0, -brdr*3)
+        FishyQR.UI.label:SetAnchor(CENTER, FishyQR.UI.background, BOTTOM, 0, -brdr*1.5)
         FishyQR.UI.label:SetText("FishyQR")
 
         EVENT_MANAGER:RegisterForUpdate(FishyQR.name .. "generateQR", FishyQRparams.updatetime, _generateQR)
 
         EVENT_MANAGER:RegisterForUpdate(FishyQR.name .. "savePos", 3000, function()
             FishyQRparams.posy = FishyQR.UI:GetTop()
-            FishyQRparams.posx = FishyQR.UI:GetLeft()
+            FishyQRparams.posx = FishyQR.UI:GetRight() - GuiRoot:GetRight()
         end)
 
         --#region addon menu
@@ -181,13 +181,14 @@ function FishyQR.OnAddOnLoaded(event, addonName)
             {
                 type = "slider",
                 name = "Updatetime",
-                min = 100,
+                min = 1,
                 max = 1500,
                 step = 50,
                 default = 400,
                 getFunc = function() return FishyQRparams.updatetime end,
                 setFunc = function(value) FishyQRparams.updatetime = value end,
-                tooltip = "Set the wait time between each QR Code Update in ms."
+                tooltip = "Set the wait time between each QR Code Update in ms.",
+                requiresReload = true
             }
         }
         LAM:RegisterOptionControls(panelName, optionsData)
