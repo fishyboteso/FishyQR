@@ -1,6 +1,6 @@
 FishyQR = {
     name = "FishyQR",
-    author = "Semjon Kerner"
+    author = "FishyESO"
 }
 
 local gps = LibGPS3

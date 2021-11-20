@@ -1,5 +1,5 @@
 ## Title: Fishy QR
-## Author: Semjon Kerner
+## Author: FishyESO
 ## APIVersion: 100028
 ## Version: 1.0.0
 ## AddOnVersion: 100
