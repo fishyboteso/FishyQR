@@ -13,9 +13,13 @@ local FishyQRdefaults = {
     updatetime = 100,
     posx        = 0,
     posy        = 0,
+    run_var     = true
 }
 local brdr = 10
 local text = 20
+
+local dimX = 0
+local dimY = 0
 
 -- QR -------------------------------
 
@@ -56,13 +60,12 @@ local function _drawQR(keyString)
         end
 
         --resize background
-        FishyQR.UI.background:SetDimensions(2*brdr + tmpLastPixel*FishyQRparams.pixelsize, 3*brdr + tmpLastPixel*FishyQRparams.pixelsize + text)
+        FishyQR.UI.background:SetDimensions(dimX, dimY)
     end
 end
 
 local tmpKeyString = ""
 local function _generateQR()
-
     --get the gps values and form them to a string
     local x, y, zoneMapIndex = gps:LocalToGlobal(GetMapPlayerPosition("player"))
     local angle = (math.deg(GetPlayerCameraHeading())-180) % 360
@@ -75,6 +78,43 @@ local function _generateQR()
     end
 end
 
+local function _stopState()
+    FishyQR.UI.buttonLabel:SetText("V")
+    FishyQR.UI.background:SetDimensions(dimX, text + brdr)
+
+    for i = 0,FishyQRparams.maxpixels-1 do
+        for j = 0,FishyQRparams.maxpixels-1 do
+            FishyQR.UI.pixel[i][j]:SetHidden(true)
+        end
+    end
+
+    EVENT_MANAGER:UnregisterForUpdate(FishyQR.name .. "generateQR", FishyQRparams.updatetime, _generateQR)
+end
+
+local function _startState()
+    FishyQR.UI.background:SetDimensions(dimX, dimY)
+    FishyQR.UI.buttonLabel:SetText("—")
+
+    if FishyQR.UI.pixel ~= nil then
+        tmpKeyString = ""
+        _generateQR()
+    end
+
+    EVENT_MANAGER:RegisterForUpdate(FishyQR.name .. "generateQR", FishyQRparams.updatetime, _generateQR)
+end
+
+local function _update_state()
+    if FishyQRparams.run_var then
+        _startState()
+    else
+        _stopState()
+    end
+end
+
+local function _toggle_running_state()
+    FishyQRparams.run_var = not FishyQRparams.run_var
+    _update_state()
+end
 
 -- INIT -----------------------------
 function FishyQR.OnAddOnLoaded(event, addonName)
@@ -90,13 +130,14 @@ function FishyQR.OnAddOnLoaded(event, addonName)
 
         --create qr ui code elements
 
-        local dim = brdr + FishyQRparams.maxpixels*FishyQRparams.pixelsize + brdr
+        dimX = brdr + FishyQRparams.maxpixels*FishyQRparams.pixelsize + brdr
+        dimY = text + brdr + FishyQRparams.maxpixels*FishyQRparams.pixelsize + brdr
 
         FishyQR.UI = WINDOW_MANAGER:CreateControl(nil, GuiRoot, CT_TOPLEVELCONTROL)
         FishyQR.UI:SetMouseEnabled(true)
         FishyQR.UI:SetClampedToScreen(true)
         FishyQR.UI:SetMovable(true)
-        FishyQR.UI:SetDimensions(dim, dim + text + brdr)
+        FishyQR.UI:SetDimensions(dimX, dimY)
         FishyQR.UI:SetDrawLevel(0)
         FishyQR.UI:SetDrawLayer(DL_MAX_VALUE-1)
         FishyQR.UI:SetDrawTier(DT_MAX_VALUE-1)
@@ -105,11 +146,27 @@ function FishyQR.OnAddOnLoaded(event, addonName)
         FishyQR.UI:SetAnchor(TOPRIGHT, GuiRoot, TOPRIGHT, FishyQRparams.posx, FishyQRparams.posy)
 
         FishyQR.UI.background = WINDOW_MANAGER:CreateControl(nil, FishyQR.UI, CT_TEXTURE)
-        FishyQR.UI.background:SetDimensions(dim, dim + text + brdr)
+        FishyQR.UI.background:SetDimensions(dimX, dimY)
         FishyQR.UI.background:SetColor(1, 1, 1)
         FishyQR.UI.background:SetAnchor(TOPLEFT, FishyQR.UI, TOPLEFT, 0, 0)
         FishyQR.UI.background:SetHidden(false)
         FishyQR.UI.background:SetDrawLevel(0)
+
+        FishyQR.UI.label = WINDOW_MANAGER:CreateControl(FishyQR.name .. "label", FishyQR.UI, CT_LABEL)
+        FishyQR.UI.label:SetFont("ZoFontChat")
+        FishyQR.UI.label:SetColor(0,0,0)
+        FishyQR.UI.label:SetAnchor(TOP, FishyQR.UI.background, TOP, 0, 0)
+        FishyQR.UI.label:SetText("FishyQR")
+
+        FishyQR.UI.buttonLabel = WINDOW_MANAGER:CreateControl(FishyQR.name .. "buttonLabel", FishyQR.UI, CT_LABEL)
+        FishyQR.UI.buttonLabel:SetFont("ZoFontChat")
+        FishyQR.UI.buttonLabel:SetColor(0,0,0)
+        FishyQR.UI.buttonLabel:SetAnchor(TOPRIGHT, FishyQR.UI.background, TOPRIGHT, -brdr, 0)
+
+        FishyQR.UI.button = WINDOW_MANAGER:CreateControl(FishyQR.name .. "button", FishyQR.UI, CT_BUTTON)
+        FishyQR.UI.button:SetDimensions(text, text)
+        FishyQR.UI.button:SetAnchor(TOPRIGHT, FishyQR.UI.background, TOPRIGHT, -brdr, 0)
+        FishyQR.UI.button:SetHandler("OnClicked", _toggle_running_state)
 
         FishyQR.UI.pixel = {}
         for i = 0,FishyQRparams.maxpixels-1 do
@@ -118,20 +175,13 @@ function FishyQR.OnAddOnLoaded(event, addonName)
                 FishyQR.UI.pixel[i][j] = WINDOW_MANAGER:CreateControl(nil, FishyQR.UI, CT_TEXTURE)
                 FishyQR.UI.pixel[i][j]:SetDimensions(FishyQRparams.pixelsize, FishyQRparams.pixelsize)
                 FishyQR.UI.pixel[i][j]:SetColor(0, 0, 0)
-                FishyQR.UI.pixel[i][j]:SetAnchor(TOPLEFT, FishyQR.UI.background, TOPLEFT, brdr+(i*FishyQRparams.pixelsize), brdr+(j*FishyQRparams.pixelsize))
+                FishyQR.UI.pixel[i][j]:SetAnchor(TOPLEFT, FishyQR.UI.background, TOPLEFT, brdr+(i*FishyQRparams.pixelsize), text+brdr+(j*FishyQRparams.pixelsize))
                 FishyQR.UI.pixel[i][j]:SetHidden(true)
                 FishyQR.UI.pixel[i][j]:SetDrawLevel(0)
             end
         end
 
-        --add start button
-        FishyQR.UI.label = WINDOW_MANAGER:CreateControl(FishyQR.name .. "label", FishyQR.UI, CT_LABEL)
-        FishyQR.UI.label:SetFont("ZoFontChat")
-        FishyQR.UI.label:SetColor(0,0,0)
-        FishyQR.UI.label:SetAnchor(CENTER, FishyQR.UI.background, BOTTOM, 0, -brdr*1.5)
-        FishyQR.UI.label:SetText("FishyQR")
-
-        EVENT_MANAGER:RegisterForUpdate(FishyQR.name .. "generateQR", FishyQRparams.updatetime, _generateQR)
+        _update_state()
 
         EVENT_MANAGER:RegisterForUpdate(FishyQR.name .. "savePos", 3000, function()
             FishyQRparams.posy = FishyQR.UI:GetTop()
