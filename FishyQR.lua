@@ -8,9 +8,9 @@ local gps = LibGPS3
 --PARAMS:
 local FishyQRparams = {}
 local FishyQRdefaults = {
-    pixelsize = 3,
+    pixelsize = 8,
     maxpixels = 25,
-    updatetime = 100,
+    updatetime = 500,
     posx        = 0,
     posy        = 0,
     run_var     = true
@@ -123,7 +123,7 @@ function FishyQR.OnAddOnLoaded(event, addonName)
         EVENT_MANAGER:UnregisterForEvent(FishyQR.name, EVENT_ADD_ON_LOADED)
 
         --load params variable
-        FishyQRparams = ZO_SavedVars:NewAccountWide("FishyQRparamsvar", 1, nil, FishyQRdefaults)
+        FishyQRparams = ZO_SavedVars:NewAccountWide("FishyQRparamsvar", 2, nil, FishyQRdefaults)
 
         --init chalutier
         fishyChaInit()
@@ -202,21 +202,10 @@ function FishyQR.OnAddOnLoaded(event, addonName)
         local optionsData = {
             {
                 type = "slider",
-                name = "Maximum Pixels",
-                min = 25,
-                max = 75,
-                default = 25,
-                getFunc = function() return FishyQRparams.maxpixels end,
-                setFunc = function(value) FishyQRparams.maxpixels = value end,
-                tooltip = "Set the maximum of pixels for QR Code that get initialized.",
-                requiresReload = true
-            },
-            {
-                type = "slider",
                 name = "Pixel Size",
                 min = 1,
                 max = 8,
-                default = 2,
+                default = 8,
                 getFunc = function() return FishyQRparams.pixelsize end,
                 setFunc = function(value)
                     FishyQRparams.pixelsize = value
@@ -229,19 +218,26 @@ function FishyQR.OnAddOnLoaded(event, addonName)
                         end
                     end
                 end,
-                tooltip = "Set the size of each pixel of the QR Code."
+                tooltip = "Set the size of each pixel of the QR Code.",
+                requiresReload = true
             },
             {
                 type = "slider",
                 name = "Updatetime",
-                min = 1,
+                min = 150,
                 max = 1500,
                 step = 50,
-                default = 400,
+                default = 500,
                 getFunc = function() return FishyQRparams.updatetime end,
                 setFunc = function(value) FishyQRparams.updatetime = value end,
                 tooltip = "Set the wait time between each QR Code Update in ms.",
                 requiresReload = true
+            },
+            {
+                type = "description",
+                title = "NOTE",
+                text = "If you experience problems with performance, try increasing Updatetime. The higher the value of Updatetime is, the less it will draw performance.",
+                width = "full"
             }
         }
         LAM:RegisterOptionControls(panelName, optionsData)
