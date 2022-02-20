@@ -1,6 +1,6 @@
 ## Title: Fishy QR
 ## Author: FishyESO
-## APIVersion: 100028
+## APIVersion: 101032 101033
 ## Version: 1.0.1
 ## AddOnVersion: 101
 ## DependsOn: LibGPS>=65 LibAddonMenu-2.0>=30
