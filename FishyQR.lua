@@ -14,7 +14,7 @@ local FishyQRdefaults = {
     updatetime = 500,
     posx        = 0,
     posy        = 0,
-    run_var     = true
+    run_var     = false
 }
 local brdr = 10
 local text = 20
@@ -201,6 +201,20 @@ function FishyQR.OnAddOnLoaded(event, addonName)
         }
         local panel = LAM:RegisterAddonPanel(panelName, panelData)
         local optionsData = {
+            {
+                type = "dropdown",
+                name = "Start State",
+                choices = {"enabled", "disabled"},
+                getFunc = function() if FishyQRparams.run_var then return "enabled" end return "disabled" end,
+                setFunc = function(var)
+                    if var == "enabled" then
+                        FishyQRparams.run_var = true
+                    else
+                        FishyQRparams.run_var = false
+                    end
+                end,
+                tooltip = "If enabled FishyQR will start immediately, when the game is loaded.",
+            },
             {
                 type = "slider",
                 name = "Pixel Size",
