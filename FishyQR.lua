@@ -111,7 +111,7 @@ local function _update_state()
     end
 end
 
-local function _toggle_running_state()
+function FishyQR.toggle_running_state()
     FishyQRparams.run_var = not FishyQRparams.run_var
     _update_state()
 end
@@ -166,7 +166,7 @@ function FishyQR.OnAddOnLoaded(event, addonName)
         FishyQR.UI.button = WINDOW_MANAGER:CreateControl(FishyQR.name .. "button", FishyQR.UI, CT_BUTTON)
         FishyQR.UI.button:SetDimensions(text, text)
         FishyQR.UI.button:SetAnchor(TOPRIGHT, FishyQR.UI.background, TOPRIGHT, -brdr, 0)
-        FishyQR.UI.button:SetHandler("OnClicked", _toggle_running_state)
+        FishyQR.UI.button:SetHandler("OnClicked", FishyQR.toggle_running_state)
 
         FishyQR.UI.pixel = {}
         for i = 0,FishyQRparams.maxpixels-1 do
@@ -241,6 +241,7 @@ function FishyQR.OnAddOnLoaded(event, addonName)
             }
         }
         LAM:RegisterOptionControls(panelName, optionsData)
+        ZO_CreateStringId("SI_BINDING_NAME_FISHYQRTOGGLE", "Toggle FishyQR")
         --#endregion
     end
 end

@@ -10,4 +10,5 @@
 
 luaqrcode\qrencode.lua
 Chalutier.lua
+Bindings.xml
 FishyQR.lua
