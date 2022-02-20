@@ -3,6 +3,7 @@ FishyQR = {
     author = "FishyESO"
 }
 
+--local logger = LibDebugLogger(FishyQR.name)
 local gps = LibGPS3
 
 --PARAMS:
