@@ -185,6 +185,11 @@ function FishyQR.OnAddOnLoaded(event, addonName)
 
         _update_state()
 
+        --set Keybind on F9 to toggle FishyQR
+        layerIndex, categoryIndex, actionIndex = GetActionIndicesFromName("FISHYQRTOGGLE")
+        CallSecureProtected('BindKeyToAction', layerIndex, categoryIndex, actionIndex, 1, 83--[[F9]])
+
+
         EVENT_MANAGER:RegisterForUpdate(FishyQR.name .. "savePos", 3000, function()
             FishyQRparams.posy = FishyQR.UI:GetTop()
             FishyQRparams.posx = FishyQR.UI:GetRight() - GuiRoot:GetRight()
