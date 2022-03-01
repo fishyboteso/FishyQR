@@ -191,7 +191,7 @@ function _createMenu()
 
     local panelData = {
         type = "panel",
-        name = FishyQR.name .. " Settings",
+        name = FishyQR.name,
         author = FishyQR.author,
     }
     local panel = LAM:RegisterAddonPanel(panelName, panelData)
