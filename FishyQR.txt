@@ -1,11 +1,11 @@
 ## Title: Fishy QR
-## Description: QR Code for FishyBotEso. |c000088Version: 1.3|r
+## Description: QR Code for FishyBotEso. |c000088Version: 1.4|r
 ## Author: FishyESO, |c0000C0Sem|r
-## APIVersion: 101033 101034
+## APIVersion: 101034 101035
 ## Version: 1.4
-## AddOnVersion: 130
-## DependsOn: LibGPS>=65 LibAddonMenu-2.0>=30
-## OptionalDependsOn: LibDebugLogger>=180, Chalutier>=120
+## AddOnVersion: 140
+## DependsOn: LibGPS>=68 LibAddonMenu-2.0>=34
+## OptionalDependsOn: LibDebugLogger>=255, Chalutier>=120
 ## SavedVariables: FishyQRparamsvar
 
 ## This Add-On is not created by, affiliated with or sponsored by ZeniMax Media Inc. or its affiliates. The Elder Scrolls® and related logos are registered trademarks or trademarks of ZeniMax Media Inc. in the United States and/or other countries. All rights reserved.
