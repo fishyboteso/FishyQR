@@ -1,8 +1,8 @@
 ## Title: Fishy QR
 ## Description: QR Code for FishyBotEso. |c000088Version: 1.3|r
 ## Author: FishyESO, |c0000C0Sem|r
-## APIVersion: 101032 101033
-## Version: 1.3.0
+## APIVersion: 101033 101034
+## Version: 1.4
 ## AddOnVersion: 130
 ## DependsOn: LibGPS>=65 LibAddonMenu-2.0>=30
 ## OptionalDependsOn: LibDebugLogger>=180, Chalutier>=120
