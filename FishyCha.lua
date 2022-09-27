@@ -28,7 +28,6 @@ local function _changeState(state, overwrite)
     if FishyCha.swimming and state == FishyCha.state.looking then state = FishyCha.state.lookaway end
 
     EVENT_MANAGER:UnregisterForUpdate(FishyCha.name .. "STATE_REELIN_END")
-    EVENT_MANAGER:UnregisterForUpdate(FishyCha.name .. "STATE_FISHING_INTERRUPT")
     EVENT_MANAGER:UnregisterForUpdate(FishyCha.name .. "STATE_DEPLETED_END")
     EVENT_MANAGER:UnregisterForEvent(FishyCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
 
@@ -46,9 +45,6 @@ local function _changeState(state, overwrite)
         EVENT_MANAGER:RegisterForEvent(FishyCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE, function()
             if FishyCha.currentState == FishyCha.state.fishing then _changeState(FishyCha.state.reelin) end
         end)
-        EVENT_MANAGER:RegisterForUpdate(FishyCha.name .. "STATE_FISHING_INTERRUPT", 28000, function()
-            if FishyCha.currentState == FishyCha.state.fishing then _changeState(FishyCha.state.idle) end
-        end)
 
     elseif state == FishyCha.state.reelin then
         EVENT_MANAGER:RegisterForUpdate(FishyCha.name .. "STATE_REELIN_END", 3000, function()
@@ -58,6 +54,21 @@ local function _changeState(state, overwrite)
 
     FishyCha.currentState = state
     FishyCha.CallbackManager:FireCallbacks(FishyCha.name .. "FishyCha_STATE_CHANGE", FishyCha.currentState)
+end
+
+local function _lootRelease()
+    local action, _, _, _, additionalInfo = GetGameCameraInteractableActionInfo()
+    local angleDiv = ((math.deg(GetPlayerCameraHeading())-180) % 360) - FishyCha.angle
+
+    if action and additionalInfo == ADDITIONAL_INTERACT_INFO_FISHING_NODE then
+        _changeState(FishyCha.state.looking)
+    elseif action then
+        _changeState(FishyCha.state.lookaway)
+    elseif -30 < angleDiv and angleDiv < 30 then
+        _changeState(FishyCha.state.depleted)
+    else
+        _changeState(FishyCha.state.idle)
+    end
 end
 
 local function _lootRelease()
@@ -95,7 +106,10 @@ local tmpNotMoving = true
 function FishyCha_OnAction()
     local action, interactableName, _, _, additionalInfo = GetGameCameraInteractableActionInfo()
 
-    if action and IsPlayerTryingToMove() and FishyCha.currentState < FishyCha.state.fishing then
+    if action and (FishyCha.currentState == FishyCha.state.fishing or FishyCha.currentState == FishyCha.state.reeling) and INTERACTION_FISH ~= GetInteractionType() then -- fishing interrupted
+        _changeState(FishyCha.state.idle)
+
+    elseif action and IsPlayerTryingToMove() and FishyCha.currentState < FishyCha.state.fishing then
         _changeState(FishyCha.state.lookaway)
         tmpInteractableName = ""
         tmpNotMoving = false
@@ -114,7 +128,7 @@ function FishyCha_OnAction()
             tmpInteractableName = interactableName
         end
 
-    elseif action and tmpInteractableName == interactableName then -- FISHING, REELIN+
+    elseif action and tmpInteractableName == interactableName and INTERACTION_FISH == GetInteractionType() then -- FISHING, REELIN+
         if FishyCha.currentState > FishyCha.state.fishing then return end
         _changeState(FishyCha.state.fishing)
 
