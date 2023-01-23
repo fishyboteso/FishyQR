@@ -71,7 +71,10 @@ local function _generateQR()
     --get the gps values and form them to a string
     local x, y, zoneMapIndex = gps:LocalToGlobal(GetMapPlayerPosition("player"))
     local angle = (math.deg(GetPlayerCameraHeading())-180) % 360
-    local keyString = string.format("%f,%f,%d,%d", x, y, angle, FishyQR.engine.currentState) -- add all data here
+    
+    -- add all data here
+    -- if made changes to this, dont forget to update the parsing in qr_detection._parse_qr_code
+    local keyString = string.format("%f,%f,%d,%d", x, y, angle, FishyQR.engine.currentState)
 
     --draw QRC with new location
     if tmpKeyString ~= keyString then
