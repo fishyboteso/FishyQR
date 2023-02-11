@@ -9,12 +9,13 @@ local gps = LibGPS3
 --PARAMS:
 local FishyQRparams = {}
 local FishyQRdefaults = {
-    pixelsize = 8,
-    maxpixels = 25,
-    updatetime = 500,
-    posx        = 0,
-    posy        = 0,
-    run_var     = false
+    pixelsize    = 8,
+    maxpixels    = 25,
+    updatetime   = 500,
+    posx         = 0,
+    posy         = 0,
+    run_var      = false,
+    change_scene = true
 }
 
 local brdr = 10
@@ -94,6 +95,9 @@ local function _stopState()
         end
     end
 
+    FishyQR.UI:SetDrawLayer(DL_MIN_VALUE)
+    FishyQR.UI:SetDrawTier(DT_MIN_VALUE)
+    
     EVENT_MANAGER:UnregisterForUpdate(FishyQR.name .. "generateQR", FishyQRparams.updatetime, _generateQR)
 end
 
@@ -106,16 +110,39 @@ local function _startState()
         tmpKeyString = ""
         _generateQR()
     end
+    
+    FishyQR.UI:SetDrawLayer(DL_MAX_VALUE-1)
+    FishyQR.UI:SetDrawTier(DT_MAX_VALUE-1)
 
     EVENT_MANAGER:RegisterForUpdate(FishyQR.name .. "generateQR", FishyQRparams.updatetime, _generateQR)
 end
 
 
+local _hideOnSceneChange
+
+
 local function _update_state()
     if FishyQR.running then
         _startState()
+        if FishyQRparams.change_scene then
+            HUD_SCENE:RegisterCallback("StateChange", _hideOnSceneChange)
+        end
     else
         _stopState()
+        HUD_SCENE:UnregisterCallback("StateChange", _hideOnSceneChange)
+    end
+end
+
+
+_hideOnSceneChange = function(oldState, newState)
+    if newState == SCENE_HIDDEN then
+        if FishyQR.engine.currentState < FishyQR.engine.state.depleted or
+           FishyQR.engine.currentState > FishyQR.engine.state.invfull
+        then
+            _stopState()
+        end
+    elseif newState == SCENE_SHOWN then
+        _update_state()
     end
 end
 
@@ -212,6 +239,22 @@ function _createMenu()
                 end
             end,
             tooltip = "If enabled FishyQR will start immediately, when the game is loaded.",
+        },
+        {
+            type = "dropdown",
+            name = "Hide On Scene Change",
+            choices = {"enabled", "disabled"},
+            getFunc = function() if FishyQRparams.change_scene then return "enabled" end return "disabled" end,
+            setFunc = function(var)
+                if var == "enabled" then
+                    FishyQRparams.change_scene = true
+                    HUD_SCENE:RegisterCallback("StateChange", _hideOnSceneChange)
+                else
+                    FishyQRparams.change_scene = false
+                    HUD_SCENE:UnregisterCallback("StateChange", _hideOnSceneChange)
+                end
+            end,
+            tooltip = "If enabled FishyQR will hide when a menu is opened.",
         },
         {
             type = "slider",
