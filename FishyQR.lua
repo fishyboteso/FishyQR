@@ -19,6 +19,7 @@ local FishyQRdefaults = {
 }
 
 local brdr = 10
+local topPad = 12
 local text = 20
 local dimX = 0
 local dimY = 0
@@ -156,7 +157,7 @@ end
 function _createUI()
     --create qr ui code elements
     dimX = brdr + FishyQRparams.maxpixels*FishyQRparams.pixelsize + brdr
-    dimY = text + brdr + FishyQRparams.maxpixels*FishyQRparams.pixelsize + brdr
+    dimY = text + brdr + topPad + FishyQRparams.maxpixels*FishyQRparams.pixelsize + brdr
 
     FishyQR.UI = WINDOW_MANAGER:CreateControl(nil, GuiRoot, CT_TOPLEVELCONTROL)
     FishyQR.UI:SetMouseEnabled(true)
@@ -200,7 +201,7 @@ function _createUI()
             FishyQR.UI.pixel[i][j] = WINDOW_MANAGER:CreateControl(nil, FishyQR.UI, CT_TEXTURE)
             FishyQR.UI.pixel[i][j]:SetDimensions(FishyQRparams.pixelsize, FishyQRparams.pixelsize)
             FishyQR.UI.pixel[i][j]:SetColor(0, 0, 0)
-            FishyQR.UI.pixel[i][j]:SetAnchor(TOPLEFT, FishyQR.UI.background, TOPLEFT, brdr+(i*FishyQRparams.pixelsize), text+brdr+(j*FishyQRparams.pixelsize))
+            FishyQR.UI.pixel[i][j]:SetAnchor(TOPLEFT, FishyQR.UI.background, TOPLEFT, brdr+(i*FishyQRparams.pixelsize), text+brdr+topPad+(j*FishyQRparams.pixelsize))
             FishyQR.UI.pixel[i][j]:SetHidden(true)
             FishyQR.UI.pixel[i][j]:SetDrawLevel(0)
         end
