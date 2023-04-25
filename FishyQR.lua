@@ -15,7 +15,8 @@ local FishyQRdefaults = {
     posx         = 0,
     posy         = 0,
     run_var      = false,
-    change_scene = true
+    change_scene = true,
+    enabled_on_looking = true
 }
 
 local brdr = 10
@@ -87,7 +88,7 @@ end
 
 
 local function _stopState()
-    FishyQR.UI.buttonLabel:SetText("V")
+    FishyQR.UI.buttonLabel:SetText("↓")
     FishyQR.UI.background:SetDimensions(dimX, text + brdr)
 
     for i = 0,FishyQRparams.maxpixels-1 do
@@ -148,9 +149,22 @@ _hideOnSceneChange = function(oldState, newState)
 end
 
 
+local function _enable_on_looking(state)
+    if state == FishyQR.engine.state.looking then
+        FishyQR.engine.CallbackManager:UnregisterCallback(FishyQR.engine.name .. "FishyCha_STATE_CHANGE", _enable_on_looking)
+        FishyQR.running = true
+        _update_state()
+    end
+end
+
+
 function FishyQR.toggle_running_state()
     FishyQR.running = not FishyQR.running
     _update_state()
+
+    if not FishyQR.running and FishyQRparams.enabled_on_looking then
+        FishyQR.engine.CallbackManager:RegisterCallback(FishyQR.engine.name .. "FishyCha_STATE_CHANGE", _enable_on_looking)
+    end
 end
 
 
@@ -258,6 +272,23 @@ function _createMenu()
             tooltip = "If enabled FishyQR will hide when a menu is opened.",
         },
         {
+            type = "dropdown",
+            name = "Enable when looking at a fishing hole",
+            choices = {"enabled", "disabled"},
+            default = "enabled",
+            getFunc = function() if FishyQRparams.enabled_on_looking then return "enabled" end return "disabled" end,
+            setFunc = function(var)
+                if var == "enabled" then
+                    FishyQRparams.enabled_on_looking = true
+                    FishyQR.engine.CallbackManager:RegisterCallback(FishyQR.engine.name .. "FishyCha_STATE_CHANGE", _enable_on_looking)
+                else
+                    FishyQR.engine.CallbackManager:UnregisterCallback(FishyQR.engine.name .. "FishyCha_STATE_CHANGE", _enable_on_looking)
+                    FishyQRparams.enabled_on_looking = false
+                end
+            end,
+            tooltip = "If enabled FishyQR will automatically start when the player is looking at a fishing hole.",
+        },
+        {
             type = "slider",
             name = "Pixel Size",
             min = 1,
@@ -313,17 +344,17 @@ function FishyQR.OnAddOnLoaded(event, addonName)
         FishyQRparams = ZO_SavedVars:NewAccountWide("FishyQRparamsvar", 2, nil, FishyQRdefaults)
 
         --init chalutier
-        if Chalutier then
-            FishyQR.engine = Chalutier
-        else
-            fishyChaInit()
-            FishyQR.engine = FishyCha
-        end
+        fishyChaInit()
+        FishyQR.engine = FishyCha
 
         FishyQR.running = FishyQRparams.run_var
 
         _createUI()
         _createMenu()
+
+        if FishyQRparams.enabled_on_looking then
+            FishyQR.engine.CallbackManager:RegisterCallback(FishyQR.engine.name .. "FishyCha_STATE_CHANGE", _enable_on_looking)
+        end
 
         _update_state()
     end
