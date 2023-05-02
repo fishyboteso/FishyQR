@@ -242,48 +242,39 @@ function _createMenu()
     local panel = LAM:RegisterAddonPanel(panelName, panelData)
     local optionsData = {
         {
-            type = "dropdown",
+            type = "checkbox",
             name = "Start State",
-            choices = {"enabled", "disabled"},
-            getFunc = function() if FishyQRparams.run_var then return "enabled" end return "disabled" end,
-            setFunc = function(var)
-                if var == "enabled" then
-                    FishyQRparams.run_var = true
-                else
-                    FishyQRparams.run_var = false
-                end
-            end,
+            default = true,
+            getFunc = function() return FishyQRparams.run_var end,
+            setFunc = function(value) FishyQRparams.run_var = value end,
             tooltip = "If enabled FishyQR will start immediately, when the game is loaded.",
         },
         {
-            type = "dropdown",
+            type = "checkbox",
             name = "Hide On Scene Change",
-            choices = {"enabled", "disabled"},
-            getFunc = function() if FishyQRparams.change_scene then return "enabled" end return "disabled" end,
-            setFunc = function(var)
-                if var == "enabled" then
-                    FishyQRparams.change_scene = true
+            default = true,
+            getFunc = function() return FishyQRparams.change_scene end,
+            setFunc = function(value)
+                FishyQRparams.change_scene = value
+                if value then
                     HUD_SCENE:RegisterCallback("StateChange", _hideOnSceneChange)
                 else
-                    FishyQRparams.change_scene = false
                     HUD_SCENE:UnregisterCallback("StateChange", _hideOnSceneChange)
                 end
             end,
             tooltip = "If enabled FishyQR will hide when a menu is opened.",
         },
         {
-            type = "dropdown",
+            type = "checkbox",
             name = "Enable when looking at a fishing hole",
-            choices = {"enabled", "disabled"},
-            default = "enabled",
-            getFunc = function() if FishyQRparams.enabled_on_looking then return "enabled" end return "disabled" end,
-            setFunc = function(var)
-                if var == "enabled" then
-                    FishyQRparams.enabled_on_looking = true
+            default = true,
+            getFunc = function() return FishyQRparams.enabled_on_looking end,
+            setFunc = function(value)
+                FishyQRparams.enabled_on_looking = value
+                if value then
                     FishyQR.engine.CallbackManager:RegisterCallback(FishyQR.engine.name .. "FishyCha_STATE_CHANGE", _enable_on_looking)
                 else
                     FishyQR.engine.CallbackManager:UnregisterCallback(FishyQR.engine.name .. "FishyCha_STATE_CHANGE", _enable_on_looking)
-                    FishyQRparams.enabled_on_looking = false
                 end
             end,
             tooltip = "If enabled FishyQR will automatically start when the player is looking at a fishing hole.",
