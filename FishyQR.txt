@@ -4,13 +4,12 @@
 ## APIVersion: 101036 101037
 ## Version: 1.6
 ## AddOnVersion: 150
-## DependsOn: LibGPS>=68 LibAddonMenu-2.0>=34
-## OptionalDependsOn: LibDebugLogger>=255, Chalutier>=120
+## DependsOn: LibGPS>=68 LibAddonMenu-2.0>=34 FishingStateMachine>=100
+## OptionalDependsOn: LibDebugLogger>=255
 ## SavedVariables: FishyQRparamsvar
 
 ## This Add-On is not created by, affiliated with or sponsored by ZeniMax Media Inc. or its affiliates. The Elder Scrolls® and related logos are registered trademarks or trademarks of ZeniMax Media Inc. in the United States and/or other countries. All rights reserved.
 
 luaqrcode\qrencode.lua
-FishyCha.lua
 Bindings.xml
 FishyQR.lua
