@@ -74,10 +74,10 @@ local function _generateQR()
     --get the gps values and form them to a string
     local x, y, zoneMapIndex = gps:LocalToGlobal(GetMapPlayerPosition("player"))
     local angle = (math.deg(GetPlayerCameraHeading())-180) % 360
-    
+
     -- add all data here
     -- if made changes to this, dont forget to update the parsing in qr_detection._parse_qr_code
-    local keyString = string.format("%f,%f,%d,%d", x, y, angle, FishyQR.engine.currentState)
+    local keyString = string.format("%f,%f,%d,%d", x, y, angle, FishyQR.engine:getState())
 
     --draw QRC with new location
     if tmpKeyString ~= keyString then
@@ -101,6 +101,7 @@ local function _stopState()
     FishyQR.UI:SetDrawTier(DT_MIN_VALUE)
     
     EVENT_MANAGER:UnregisterForUpdate(FishyQR.name .. "generateQR", FishyQRparams.updatetime, _generateQR)
+    FishyQR.engine:unregisterOnStateChange(_generateQR)
 end
 
 
@@ -117,6 +118,7 @@ local function _startState()
     FishyQR.UI:SetDrawTier(DT_MAX_VALUE-1)
 
     EVENT_MANAGER:RegisterForUpdate(FishyQR.name .. "generateQR", FishyQRparams.updatetime, _generateQR)
+    FishyQR.engine:registerOnStateChange(_generateQR)
 end
 
 
@@ -151,7 +153,7 @@ end
 
 local function _enable_on_looking(state)
     if state == FishyQR.engine.state.looking then
-        FishyQR.engine.CallbackManager:UnregisterCallback(FishyQR.engine.name .. "FishyCha_STATE_CHANGE", _enable_on_looking)
+        FishyQR.engine:unregisterOnStateChange(_enable_on_looking)
         FishyQR.running = true
         _update_state()
     end
@@ -163,7 +165,7 @@ function FishyQR.toggle_running_state()
     _update_state()
 
     if not FishyQR.running and FishyQRparams.enabled_on_looking then
-        FishyQR.engine.CallbackManager:RegisterCallback(FishyQR.engine.name .. "FishyCha_STATE_CHANGE", _enable_on_looking)
+        FishyQR.engine:registerOnStateChange(_enable_on_looking)
     end
 end
 
@@ -272,9 +274,9 @@ function _createMenu()
             setFunc = function(value)
                 FishyQRparams.enabled_on_looking = value
                 if value then
-                    FishyQR.engine.CallbackManager:RegisterCallback(FishyQR.engine.name .. "FishyCha_STATE_CHANGE", _enable_on_looking)
+                    FishyQR.engine:registerOnStateChange(_enable_on_looking)
                 else
-                    FishyQR.engine.CallbackManager:UnregisterCallback(FishyQR.engine.name .. "FishyCha_STATE_CHANGE", _enable_on_looking)
+                    FishyQR.engine:unregisterOnStateChange(_enable_on_looking)
                 end
             end,
             tooltip = "If enabled FishyQR will automatically start when the player is looking at a fishing hole.",
@@ -335,8 +337,7 @@ function FishyQR.OnAddOnLoaded(event, addonName)
         FishyQRparams = ZO_SavedVars:NewAccountWide("FishyQRparamsvar", 2, nil, FishyQRdefaults)
 
         --init chalutier
-        fishyChaInit()
-        FishyQR.engine = FishyCha
+        FishyQR.engine = FishingStateMachine
 
         FishyQR.running = FishyQRparams.run_var
 
@@ -344,7 +345,7 @@ function FishyQR.OnAddOnLoaded(event, addonName)
         _createMenu()
 
         if FishyQRparams.enabled_on_looking then
-            FishyQR.engine.CallbackManager:RegisterCallback(FishyQR.engine.name .. "FishyCha_STATE_CHANGE", _enable_on_looking)
+            FishyQR.engine:registerOnStateChange(_enable_on_looking)
         end
 
         _update_state()
