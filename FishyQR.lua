@@ -76,7 +76,7 @@ local tmpKeyString = ""
 local function _generateQR()
     --get the gps values and form them to a string
     local x, y, zoneMapIndex = gps:LocalToGlobal(GetMapPlayerPosition("player"))
-    local angle = (math.deg(GetPlayerCameraHeading())-180) % 360
+    local angle = FishyQRparams.algorithm()
 
     -- add all data here
     -- if made changes to this, dont forget to update the parsing in qr_detection._parse_qr_code
@@ -352,6 +352,24 @@ function _createMenu()
             title = "NOTE",
             text = "If you experience problems with performance, try increasing Updatetime. The higher the value of Updatetime is, the less it will draw performance.",
             width = "full"
+        },
+        {
+            type = "dropdown",
+            name = "Algorithm for Angle",
+            choices = {"fishy", "always zero"},
+            getFunc = function() if FishyQRparams.run_var then return "enabled" end return "disabled" end,
+            setFunc = function(var)
+                if var == "fishy" then
+                    FishyQRparams.algorithm = function () {
+                        return (math.deg(GetPlayerCameraHeading())-180) % 360
+                    }
+                else
+                    FishyQRparams.algorithm = function () {
+                        return 0
+                    }
+                end
+            end,
+            tooltip = "Don't touch, unless you know which algorithm you need",
         }
     }
     LAM:RegisterOptionControls(panelName, optionsData)
@@ -380,6 +398,10 @@ local function _onAddOnLoaded(event, addonName)
         if FishyQRparams.enabled_on_looking then
             FishyQR.engine:registerOnStateChange(_enable_on_looking)
         end
+                
+        FishyQRparams.algorithm = function () {
+            return (math.deg(GetPlayerCameraHeading())-180) % 360
+        }
 
         _update_state()
     end
