@@ -249,6 +249,9 @@ local function _createUI()
     end)
 end
 
+fishyAngle = function () {
+    return (math.deg(GetPlayerCameraHeading())-180) % 360
+}
 
 function _createMenu()
     local this = FishyQR
@@ -357,16 +360,18 @@ function _createMenu()
             type = "dropdown",
             name = "Algorithm for Angle",
             choices = {"fishy", "always zero"},
-            getFunc = function() if FishyQRparams.run_var then return "enabled" end return "disabled" end,
+            getFunc = function()
+                if FishyQRparams.algorithm == fishyAngle then
+                    return "fishy"
+                else
+                    return "always zero"
+                end
+            end,
             setFunc = function(var)
                 if var == "fishy" then
-                    FishyQRparams.algorithm = function () {
-                        return (math.deg(GetPlayerCameraHeading())-180) % 360
-                    }
-                else
-                    FishyQRparams.algorithm = function () {
-                        return 0
-                    }
+                    FishyQRparams.algorithm = fishyAngle
+                elseif var == "always zero"
+                    FishyQRparams.algorithm = function () { return 0 }
                 end
             end,
             tooltip = "Don't touch, unless you know which algorithm you need",
@@ -398,10 +403,10 @@ local function _onAddOnLoaded(event, addonName)
         if FishyQRparams.enabled_on_looking then
             FishyQR.engine:registerOnStateChange(_enable_on_looking)
         end
-                
-        FishyQRparams.algorithm = function () {
-            return (math.deg(GetPlayerCameraHeading())-180) % 360
-        }
+
+        if FishyQRparams.algorithm == nil then
+            FishyQRparams.algorithm = fishyAngle
+        end
 
         _update_state()
     end
