@@ -333,10 +333,10 @@ function _createMenu()
         {
             type = "slider",
             name = "Updatetime",
-            min = 50,
+            min = 0,
             max = 1500,
-            step = 50,
-            default = 500,
+            step = 10,
+            default = 150,
             getFunc = function() return params.updatetime end,
             setFunc = function(value)
                 EVENT_MANAGER:UnregisterForUpdate(this.name .. "generateQR")
