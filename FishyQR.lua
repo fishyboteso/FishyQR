@@ -16,7 +16,8 @@ local FishyQRdefaults = {
     posy         = 0,
     run_var      = false,
     change_scene = true,
-    enabled_on_looking = true
+    enabled_on_looking = true,
+    minFPS = 0
 }
 
 local brdr = 10
@@ -74,6 +75,13 @@ end
 
 local tmpKeyString = ""
 local function _generateQR()
+    -- watchdog for FPS drops
+    if (1000/(GetGameTimeMilliseconds() - GetFrameTimeMilliseconds())) < FishyQRparams.minFPS then
+        FishyQRparams.updatetime = math.min(FishyQRparams.updatetime + 10, 1500)
+        EVENT_MANAGER:UnregisterForUpdate(FishyQR.name .. "generateQR")
+        EVENT_MANAGER:RegisterForUpdate(FishyQR.name .. "generateQR", FishyQRparams.updatetime, _generateQR)
+    end
+    
     --get the gps values and form them to a string
     local x, y, zoneMapIndex = gps:LocalToGlobal(GetMapPlayerPosition("player"))
     local angle = (math.deg(GetPlayerCameraHeading())-180) % 360
@@ -264,6 +272,7 @@ function _createMenu()
         type = "panel",
         name = this.name,
         author = this.author,
+        registerForRefresh = true,
     }
     local panel = LAM:RegisterAddonPanel(panelName, panelData)
     local optionsData = {
@@ -348,6 +357,17 @@ function _createMenu()
             tooltip = "Set the wait time between each QR Code Update in ms."
         },
         {
+            type = "slider",
+            name = "MinFPS",
+            min = 0,
+            max = 140,
+            step = 5,
+            default = 60,
+            getFunc = function() return params.minFPS end,
+            setFunc = function(value) params.minFPS = value end,
+            tooltip = "Set the minimum FPS that your game should render. 0 = disabled."
+        },
+        {
             type = "description",
             title = "NOTE",
             text = "If you experience problems with performance, try increasing Updatetime. The higher the value of Updatetime is, the less it will draw performance.",
@@ -381,7 +401,7 @@ local function _onAddOnLoaded(event, addonName)
             FishyQR.engine:registerOnStateChange(_enable_on_looking)
         end
 
-        _update_state()
+        zo_callLater(_update_state, 2000)
     end
 end
 
